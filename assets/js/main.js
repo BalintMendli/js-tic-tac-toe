@@ -1,8 +1,33 @@
 const gameBoard = (() => {
-  const board = ['x', , '0'];
+  const board = [];
   const setPosition = (i, s) => (board[i] = s);
   const getPosition = i => board[i];
-  return { setPosition, getPosition };
+  const isFull = () => board.filter(e => e).length === 9;
+  const winningSets = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  const hasWinningPositionsbyPlayer = sign => {
+    const playerPositions = board.map((el, i) => (el === sign ? i : null));
+    return winningSets.some(winningSet =>
+      winningSet.every(pos => playerPositions.includes(pos))
+    );
+  };
+  const reset = () => (board.length = 0);
+  return {
+    setPosition,
+    getPosition,
+    isFull,
+    hasWinningPositionsbyPlayer,
+    reset,
+    board
+  };
 })();
 
 const Player = (name, sign) => {
@@ -11,7 +36,7 @@ const Player = (name, sign) => {
   const makeMove = i => {
     if (!gameBoard.getPosition(i)) {
       gameBoard.setPosition(i, getSign());
-      displayController.renderBoard();
+      return true;
     }
   };
   return { getName, getSign, makeMove };
@@ -21,33 +46,62 @@ const player1 = Player('Player 1', 'X');
 const player2 = Player('Player 2', 'O');
 
 const displayController = (() => {
-  const setup = () => {
+  const getCellNodes = () => {
     const cells = document.querySelectorAll('.cell');
-    [...cells].forEach((cell, i) => {
-      cell.addEventListener('click', () => game.makeMove(i));
+    return [...cells];
+  };
+  const setup = () => {
+    getCellNodes().forEach((cell, i) => {
+      cell.addEventListener('click', () => game.turn(i));
     });
+    document.querySelector('.new-game').addEventListener('click', game.restart);
   };
   const renderBoard = () => {
-    const cells = document.querySelectorAll('.cell');
-    [...cells].forEach((cell, i) => {
+    getCellNodes().forEach((cell, i) => {
       const cellCont = gameBoard.getPosition(i);
-      if (cellCont) cell.innerText = cellCont;
+      cell.innerText = cellCont ? cellCont : '';
     });
   };
-  return { setup, renderBoard };
+  const showResult = winner => {
+    const text = winner ? `${winner} has won!` : "It's a tie!";
+    const messages = document.querySelector('.messages');
+    messages.innerText = text;
+  };
+  return { setup, renderBoard, showResult };
 })();
 
 const game = (() => {
-  const makeMove = i => {
-    player1.makeMove(i);
+  let currPlayer = player1;
+  let isOn = true;
+  const turn = i => {
+    if (isOn) {
+      const move = currPlayer.makeMove(i);
+      if (move) {
+        displayController.renderBoard();
+        if (gameBoard.isFull()) end();
+        if (gameBoard.hasWinningPositionsbyPlayer(currPlayer.getSign()))
+          end(currPlayer.getName());
+        switchPlayer();
+      }
+    }
+  };
+  const switchPlayer = () => {
+    currPlayer = currPlayer === player1 ? player2 : player1;
   };
   const start = () => {
     displayController.setup();
-    displayController.renderBoard();
-    player1.makeMove(8);
-    player2.makeMove(0);
   };
-  return { makeMove, start };
+  const restart = () => {
+    gameBoard.reset();
+    displayController.renderBoard();
+    currPlayer = player1;
+    isOn = true;
+  };
+  const end = winner => {
+    displayController.showResult(winner);
+    isOn = false;
+  };
+  return { turn, start, restart };
 })();
 
 game.start();
