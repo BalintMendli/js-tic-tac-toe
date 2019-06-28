@@ -47,8 +47,12 @@ const displayController = (() => {
     [...document.querySelectorAll('.cell')].forEach((cell, i) => {
       cell.addEventListener('click', () => game.turn(i));
     });
-    document.querySelector('.new-game').addEventListener('click', initNewGame);
-    document.querySelector('.start').addEventListener('click', game.restart);
+    document
+      .querySelector('.new-game')
+      .addEventListener('click', game.initNewGame);
+    document
+      .querySelector('.start')
+      .addEventListener('click', game.startRestart);
   };
   const renderBoard = () => {
     [...document.querySelectorAll('.cell')].forEach((cell, i) => {
@@ -56,9 +60,8 @@ const displayController = (() => {
       cell.innerText = cellCont ? cellCont : '';
     });
   };
-  const initNewGame = () => {
-    gameBoard.reset();
-    displayController.renderBoard();
+  const setupNewGame = () => {
+    renderBoard();
     clearMessages();
     showInputs();
   };
@@ -71,12 +74,14 @@ const displayController = (() => {
   };
   const showInputs = () => {
     document.querySelector('.name-inputs').classList.remove('hide');
+    document.querySelector('.new-game').classList.add('hide');
   };
   const hideInputs = () => {
     document.querySelector('.name-inputs').classList.add('hide');
     document
       .querySelectorAll('.name-inputs input')
       .forEach(input => (input.value = ''));
+    document.querySelector('.new-game').classList.remove('hide');
   };
   const getNames = () => {
     const inputs = document.querySelectorAll('.name-inputs input');
@@ -93,7 +98,8 @@ const displayController = (() => {
     showResult,
     hideInputs,
     getNames,
-    showTurn
+    showTurn,
+    setupNewGame
   };
 })();
 
@@ -105,7 +111,12 @@ const game = (() => {
   const start = () => {
     displayController.setup();
   };
-  const restart = () => {
+  const initNewGame = () => {
+    isOn = false;
+    gameBoard.reset();
+    displayController.setupNewGame();
+  };
+  const startRestart = () => {
     const playerNames = displayController.getNames();
     player1 = Player(playerNames[0], 'X');
     player2 = Player(playerNames[1], 'O');
@@ -139,7 +150,7 @@ const game = (() => {
     displayController.showResult(winner);
     isOn = false;
   };
-  return { turn, start, restart };
+  return { turn, start, startRestart, initNewGame };
 })();
 
 game.start();
