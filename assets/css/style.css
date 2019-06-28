@@ -1,13 +1,47 @@
+html,
+body {
+  font-family: 'Permanent Marker', cursive;
+  font-size: 1.25rem;
+  color: #353535;
+  background-color: #f3f3f3;
+  text-align: center;
+}
+
+.new-game {
+  cursor: pointer;
+}
+
 .table {
   width: 400px;
   height: 400px;
+  margin: 30px auto;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;
+  /* border: 7px solid #ebebeb; */
+  border-radius: 10px;
+  /* box-shadow: 1px 2px 6px 0px #cacaca; */
+  --border: 7px solid #353535;
 }
 
 .cell {
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 3rem;
+  cursor: pointer;
+}
+
+.cell:nth-child(3n + 2) {
+  border-left: var(--border);
+  border-right: var(--border);
+}
+
+.cell:nth-child(n + 4):nth-child(-n + 6) {
+  border-top: var(--border);
+  border-bottom: var(--border);
+}
+
+.hide {
+  display: none;
 }

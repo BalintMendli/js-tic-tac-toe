@@ -25,8 +25,7 @@ const gameBoard = (() => {
     getPosition,
     isFull,
     hasWinningPositionsbyPlayer,
-    reset,
-    board
+    reset
   };
 })();
 
@@ -42,9 +41,6 @@ const Player = (name, sign) => {
   return { getName, getSign, makeMove };
 };
 
-const player1 = Player('Player 1', 'X');
-const player2 = Player('Player 2', 'O');
-
 const displayController = (() => {
   const getCellNodes = () => {
     const cells = document.querySelectorAll('.cell');
@@ -54,7 +50,8 @@ const displayController = (() => {
     getCellNodes().forEach((cell, i) => {
       cell.addEventListener('click', () => game.turn(i));
     });
-    document.querySelector('.new-game').addEventListener('click', game.restart);
+    document.querySelector('.new-game').addEventListener('click', setupNewGame);
+    document.querySelector('.start').addEventListener('click', game.restart);
   };
   const renderBoard = () => {
     getCellNodes().forEach((cell, i) => {
@@ -62,26 +59,65 @@ const displayController = (() => {
       cell.innerText = cellCont ? cellCont : '';
     });
   };
-  const showResult = winner => {
-    const text = winner ? `${winner} has won!` : "It's a tie!";
-    const messages = document.querySelector('.messages');
-    messages.innerText = text;
+  const setupNewGame = () => {
+    gameBoard.reset();
+    displayController.renderBoard();
+    clearMessages();
+    showInputs();
   };
-  return { setup, renderBoard, showResult };
+  const clearMessages = () => {
+    document.querySelector('.messages').innerText = '';
+  };
+  const showResult = winner => {
+    const text = winner ? `${winner} has won!` : "It's a draw!";
+    document.querySelector('.messages').innerText = text;
+  };
+  const showInputs = () => {
+    document.querySelector('.name-inputs').classList.remove('hide');
+  };
+  const hideInputs = () => {
+    document.querySelector('.name-inputs').classList.add('hide');
+    document
+      .querySelectorAll('.name-inputs input')
+      .forEach(input => (input.value = ''));
+  };
+  const getNames = () => {
+    const inputs = document.querySelectorAll('.name-inputs input');
+    return [...inputs].map((input, i) => input.value || `Player ${i + 1}`);
+  };
+  const showTurn = name => {
+    document.querySelector('.messages').innerText = `${name}'s turn:`;
+  };
+  return {
+    setup,
+    renderBoard,
+    showResult,
+    hideInputs,
+    getNames,
+    showTurn
+  };
 })();
 
 const game = (() => {
+  let player1;
+  let player2;
   let currPlayer = player1;
-  let isOn = true;
+  let isOn = false;
   const turn = i => {
     if (isOn) {
       const move = currPlayer.makeMove(i);
       if (move) {
         displayController.renderBoard();
-        if (gameBoard.isFull()) end();
-        if (gameBoard.hasWinningPositionsbyPlayer(currPlayer.getSign()))
+        if (gameBoard.isFull()) {
+          end();
+          return;
+        }
+        if (gameBoard.hasWinningPositionsbyPlayer(currPlayer.getSign())) {
           end(currPlayer.getName());
+          return;
+        }
         switchPlayer();
+        displayController.showTurn(currPlayer.getName());
       }
     }
   };
@@ -92,9 +128,12 @@ const game = (() => {
     displayController.setup();
   };
   const restart = () => {
-    gameBoard.reset();
-    displayController.renderBoard();
+    const playerNames = displayController.getNames();
+    player1 = Player(playerNames[0], 'X');
+    player2 = Player(playerNames[1], 'O');
+    displayController.hideInputs();
     currPlayer = player1;
+    displayController.showTurn(currPlayer.getName());
     isOn = true;
   };
   const end = winner => {
