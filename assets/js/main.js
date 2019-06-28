@@ -1,8 +1,5 @@
 const gameBoard = (() => {
   const board = [];
-  const setPosition = (i, s) => (board[i] = s);
-  const getPosition = i => board[i];
-  const isFull = () => board.filter(e => e).length === 9;
   const winningSets = [
     [0, 1, 2],
     [3, 4, 5],
@@ -13,13 +10,17 @@ const gameBoard = (() => {
     [0, 4, 8],
     [2, 4, 6]
   ];
-  const hasWinningPositionsbyPlayer = sign => {
+  const setPosition = (i, s) => (board[i] = s);
+  const getPosition = i => board[i];
+  const reset = () => (board.length = 0);
+  const isFull = () => board.filter(e => e).length === 9;
+  const hasWinningPositionsbyPlayer = player => {
+    const sign = player.getSign();
     const playerPositions = board.map((el, i) => (el === sign ? i : null));
     return winningSets.some(winningSet =>
       winningSet.every(pos => playerPositions.includes(pos))
     );
   };
-  const reset = () => (board.length = 0);
   return {
     setPosition,
     getPosition,
@@ -42,24 +43,20 @@ const Player = (name, sign) => {
 };
 
 const displayController = (() => {
-  const getCellNodes = () => {
-    const cells = document.querySelectorAll('.cell');
-    return [...cells];
-  };
   const setup = () => {
-    getCellNodes().forEach((cell, i) => {
+    [...document.querySelectorAll('.cell')].forEach((cell, i) => {
       cell.addEventListener('click', () => game.turn(i));
     });
-    document.querySelector('.new-game').addEventListener('click', setupNewGame);
+    document.querySelector('.new-game').addEventListener('click', initNewGame);
     document.querySelector('.start').addEventListener('click', game.restart);
   };
   const renderBoard = () => {
-    getCellNodes().forEach((cell, i) => {
+    [...document.querySelectorAll('.cell')].forEach((cell, i) => {
       const cellCont = gameBoard.getPosition(i);
       cell.innerText = cellCont ? cellCont : '';
     });
   };
-  const setupNewGame = () => {
+  const initNewGame = () => {
     gameBoard.reset();
     displayController.renderBoard();
     clearMessages();
@@ -69,7 +66,7 @@ const displayController = (() => {
     document.querySelector('.messages').innerText = '';
   };
   const showResult = winner => {
-    const text = winner ? `${winner} has won!` : "It's a draw!";
+    const text = winner ? `${winner.getName()} has won!` : "It's a draw!";
     document.querySelector('.messages').innerText = text;
   };
   const showInputs = () => {
@@ -85,8 +82,10 @@ const displayController = (() => {
     const inputs = document.querySelectorAll('.name-inputs input');
     return [...inputs].map((input, i) => input.value || `Player ${i + 1}`);
   };
-  const showTurn = name => {
-    document.querySelector('.messages').innerText = `${name}'s turn:`;
+  const showTurn = player => {
+    const name = player.getName();
+    const sign = player.getSign();
+    document.querySelector('.messages').innerText = `${name}'s turn: (${sign})`;
   };
   return {
     setup,
@@ -101,29 +100,8 @@ const displayController = (() => {
 const game = (() => {
   let player1;
   let player2;
-  let currPlayer = player1;
   let isOn = false;
-  const turn = i => {
-    if (isOn) {
-      const move = currPlayer.makeMove(i);
-      if (move) {
-        displayController.renderBoard();
-        if (gameBoard.isFull()) {
-          end();
-          return;
-        }
-        if (gameBoard.hasWinningPositionsbyPlayer(currPlayer.getSign())) {
-          end(currPlayer.getName());
-          return;
-        }
-        switchPlayer();
-        displayController.showTurn(currPlayer.getName());
-      }
-    }
-  };
-  const switchPlayer = () => {
-    currPlayer = currPlayer === player1 ? player2 : player1;
-  };
+  let currPlayer;
   const start = () => {
     displayController.setup();
   };
@@ -133,8 +111,29 @@ const game = (() => {
     player2 = Player(playerNames[1], 'O');
     displayController.hideInputs();
     currPlayer = player1;
-    displayController.showTurn(currPlayer.getName());
+    displayController.showTurn(currPlayer);
     isOn = true;
+  };
+  const switchPlayer = () => {
+    currPlayer = currPlayer === player1 ? player2 : player1;
+  };
+  const turn = i => {
+    if (isOn) {
+      const move = currPlayer.makeMove(i);
+      if (move) {
+        displayController.renderBoard();
+        if (gameBoard.isFull()) {
+          end();
+          return;
+        }
+        if (gameBoard.hasWinningPositionsbyPlayer(currPlayer)) {
+          end(currPlayer);
+          return;
+        }
+        switchPlayer();
+        displayController.showTurn(currPlayer);
+      }
+    }
   };
   const end = winner => {
     displayController.showResult(winner);
