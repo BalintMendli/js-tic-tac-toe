@@ -13,10 +13,8 @@ const gameBoard = (() => {
   const reset = () => (board.length = 0);
   const isFull = () => board.filter(e => e).length === 9;
   const hasWinningPositionsbyPlayer = player => {
-    const sign = player.sign;
-    const playerPositions = board.map((el, i) => (el === sign ? i : null));
     return winningSets.some(winningSet =>
-      winningSet.every(pos => playerPositions.includes(pos))
+      winningSet.every(pos => player.positions.includes(pos))
     );
   };
   return {
@@ -28,13 +26,15 @@ const gameBoard = (() => {
 })();
 
 const Player = (name, sign) => {
+  const positions = [];
   const makeMove = i => {
     if (!gameBoard.board[i]) {
+      positions.push(i);
       gameBoard.board[i] = sign;
       return true;
     }
   };
-  return { name, sign, makeMove };
+  return { name, sign, makeMove, positions };
 };
 
 const displayController = (() => {
