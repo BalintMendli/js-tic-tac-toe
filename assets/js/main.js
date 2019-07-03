@@ -45,9 +45,7 @@ const displayController = (() => {
     document
       .querySelector('.new-game')
       .addEventListener('click', game.initNewGame);
-    document
-      .querySelector('.start')
-      .addEventListener('click', game.startRestart);
+    document.querySelector('.start').addEventListener('click', game.startTurns);
   };
   const renderBoard = () => {
     [...document.querySelectorAll('.cell')].forEach((cell, i) => {
@@ -107,11 +105,10 @@ const game = (() => {
     displayController.setup();
   };
   const initNewGame = () => {
-    isOn = false;
     gameBoard.reset();
     displayController.setupNewGame();
   };
-  const startRestart = () => {
+  const startTurns = () => {
     const playerNames = displayController.getNames();
     player1 = Player(playerNames[0], 'X');
     player2 = Player(playerNames[1], 'O');
@@ -145,7 +142,7 @@ const game = (() => {
     displayController.showResult(winner);
     isOn = false;
   };
-  return { turn, start, startRestart, initNewGame };
+  return { turn, start, startTurns, initNewGame };
 })();
 
 game.start();
