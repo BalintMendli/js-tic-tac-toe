@@ -27,10 +27,10 @@ const gameBoard = (() => {
 
 const Player = (name, sign) => {
   const positions = [];
-  const makeMove = i => {
-    if (!gameBoard.board[i]) {
+  const makeMove = (i, board) => {
+    if (!board[i]) {
       positions.push(i);
-      gameBoard.board[i] = sign;
+      board[i] = sign;
       return true;
     }
   };
@@ -125,7 +125,7 @@ const game = (() => {
   };
   const turn = i => {
     if (isOn) {
-      const move = currPlayer.makeMove(i);
+      const move = currPlayer.makeMove(i, gameBoard.board);
       if (move) {
         displayController.renderBoard();
         if (gameBoard.isFull()) {
