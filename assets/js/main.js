@@ -10,20 +10,17 @@ const gameBoard = (() => {
     [0, 4, 8],
     [2, 4, 6]
   ];
-  const setPosition = (i, s) => (board[i] = s);
-  const getPosition = i => board[i];
   const reset = () => (board.length = 0);
   const isFull = () => board.filter(e => e).length === 9;
   const hasWinningPositionsbyPlayer = player => {
-    const sign = player.getSign();
+    const sign = player.sign;
     const playerPositions = board.map((el, i) => (el === sign ? i : null));
     return winningSets.some(winningSet =>
       winningSet.every(pos => playerPositions.includes(pos))
     );
   };
   return {
-    setPosition,
-    getPosition,
+    board,
     isFull,
     hasWinningPositionsbyPlayer,
     reset
@@ -31,15 +28,13 @@ const gameBoard = (() => {
 })();
 
 const Player = (name, sign) => {
-  const getName = () => name;
-  const getSign = () => sign;
   const makeMove = i => {
-    if (!gameBoard.getPosition(i)) {
-      gameBoard.setPosition(i, getSign());
+    if (!gameBoard.board[i]) {
+      gameBoard.board[i] = sign;
       return true;
     }
   };
-  return { getName, getSign, makeMove };
+  return { name, sign, makeMove };
 };
 
 const displayController = (() => {
@@ -56,7 +51,7 @@ const displayController = (() => {
   };
   const renderBoard = () => {
     [...document.querySelectorAll('.cell')].forEach((cell, i) => {
-      const cellCont = gameBoard.getPosition(i);
+      const cellCont = gameBoard.board[i];
       cell.innerText = cellCont ? cellCont : '';
     });
   };
@@ -69,7 +64,7 @@ const displayController = (() => {
     document.querySelector('.messages').innerText = '';
   };
   const showResult = winner => {
-    const text = winner ? `${winner.getName()} has won!` : "It's a draw!";
+    const text = winner ? `${winner.name} has won!` : "It's a draw!";
     document.querySelector('.messages').innerText = text;
   };
   const showInputs = () => {
@@ -88,8 +83,8 @@ const displayController = (() => {
     return [...inputs].map((input, i) => input.value || `Player ${i + 1}`);
   };
   const showTurn = player => {
-    const name = player.getName();
-    const sign = player.getSign();
+    const name = player.name;
+    const sign = player.sign;
     document.querySelector('.messages').innerText = `${name}'s turn: (${sign})`;
   };
   return {
